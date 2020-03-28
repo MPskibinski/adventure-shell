@@ -1,6 +1,9 @@
 import os
 from cmd import Cmd
 from time import sleep
+from enum import Enum
+
+DISTANCE = Enum('DISTANCE','Self Held HeldContained Location Here HereContained Overthere NotHere UnknownObject')
 
 class GameObject:
     def __init__(self, name,description,tag,location=None):
