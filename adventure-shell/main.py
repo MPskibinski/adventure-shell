@@ -53,12 +53,6 @@ def render():
     print('\033[33m',listObjectsAtLocation(player.location),'\033[0m')
     return None
 
-def findGameObjectByTag(tag):
-    for obj in game_objects:
-        if obj.tag.lower()==tag.lower(): return obj
-    else: 
-            return None
-
 def getDistance(obj_from, obj_to):
     if obj_to == None : return DISTANCE.UnknownObject
     if obj_from == None : return DISTANCE.UknownObject
@@ -68,10 +62,16 @@ def getDistance(obj_from, obj_to):
     if obj_to.location == obj_from.location : return DISTANCE.Here
     if getRoad(obj_from.location,game_objects.index(obj_to)) != None : return DISTANCE.Overthere
     if obj_to.location == None : return DISTANCE.NotHere
-    if game_objects[to.location].location == game_objects.index(obj_from) : return DISTANCE.HeldContained
-    if game_objects[to.location].location == obj_from.location : return DISTANCE.HereContained
+    if game_objects[obj_to.location].location == game_objects.index(obj_from) : return DISTANCE.HeldContained
+    if game_objects[obj_to.location].location == obj_from.location : return DISTANCE.HereContained
 
     return DISTANCE.NotHere
+
+def findGameObjectByTag(tag, obj_to, max_distance):
+    for obj in game_objects:
+        if obj.tag.lower()==tag.lower() and getDistance(obj,obj_to).value <= max_distance.value: return obj
+    else: 
+            return None
 
 
 def listObjectsAtLocation(location):
@@ -86,25 +86,17 @@ def moveGameObject(what,where):
         what.location = game_objects.index(where)
     return False
 
-def getAccessibleObject(intention,tag):
-    obj = findGameObjectByTag(tag)
+def getAccessibleObject(tag):
+    obj = findGameObjectByTag(tag, player,DISTANCE.Overthere)
     if obj == None :
-        print ('I think we do not know how to access',tag)
-    elif not(obj == player or
-             obj == game_objects[player.location] or
-             obj.location == game_objects.index(player) or
-             obj.location == player.location or
-             getRoad(player.location,game_objects.index(obj)) != None or
-             obj.location == None or
-             game_objects[obj.location].location == game_objects.index(player) or
-             game_objects[obj.location].location == player.location
-            ):
-        print('I am afraid we do not see',tag)
-        obj = None
+        if findGameObjectByTag(tag, player,DISTANCE.NotHere) == None:    
+            print('I am afraid we do not see',tag)
+        else:
+            print ('I think we do not know how to access',tag)
     return obj
 
 def getPossession(source, tag):
-    obj  = findGameObjectByTag(tag)
+    obj  = findGameObjectByTag(tag,player,DISTANCE.HeldContained)
     if source == None:
         print ('I think we do not understand')
     elif obj == None:
@@ -124,8 +116,8 @@ def getRoad(location,destination):
                 return road
     return None
 
-def executeGo(tag): # renamte target to tag ?
-    go_target = getAccessibleObject('go',tag)
+def executeGo(tag):
+    go_target = getAccessibleObject(tag)
     get_distance = getDistance(player,go_target)
     if get_distance == DISTANCE.Overthere :
         player.location = game_objects.index(go_target)
@@ -144,8 +136,6 @@ def executeGo(tag): # renamte target to tag ?
 #    if getRoad(player.location,game_objects.index(go_target)) != None:
 #        player.location = game_objects.index(go_target)
 #        return render
-#    if go_target.location != player.location:
-#        print('I think we do not see',tag)
     print('We can\'t')
     
     return False
@@ -156,7 +146,7 @@ def executeInventory():
     return None
 
 def executeGet(tag):
-    obj = getAccessibleObject('go',tag)
+    obj = getAccessibleObject(tag)
     if obj == None: return False
     if obj == player: 
         print ('We should not do that in game for teens')
