@@ -59,6 +59,21 @@ def findGameObjectByTag(tag):
     else: 
             return None
 
+def getDistance(obj_from, obj_to):
+    if obj_to == None : return DISTANCE.UnknownObject
+    if obj_from == None : return DISTANCE.UknownObject
+    if obj_to == obj_from : return DISTANCE.Self
+    if obj_to.location == game_objects.index(obj_from) : return DISTANCE.Held
+    if game_objects.index(obj_to) == obj_from.location : return DISTANCE.Location
+    if obj_to.location == obj_from.location : return DISTANCE.Here
+    if getRoad(obj_from.location,game_objects.index(obj_to)) != None : return DISTANCE.Overthere
+    if obj_to.location == None : return DISTANCE.NotHere
+    if game_objects[to.location].location == game_objects.index(obj_from) : return DISTANCE.HeldContained
+    if game_objects[to.location].location == obj_from.location : return DISTANCE.HereContained
+
+    return DISTANCE.NotHere
+
+
 def listObjectsAtLocation(location):
     return [obj for obj in game_objects if obj.location==location and obj!=player ]
 
@@ -111,20 +126,27 @@ def getRoad(location,destination):
 
 def executeGo(tag): # renamte target to tag ?
     go_target = getAccessibleObject('go',tag)
-    if go_target == None: return False
-    if player.location == game_objects.index(go_target):
-        print('I think we are already in place called',tag)
+    get_distance = getDistance(player,go_target)
+    if get_distance == DISTANCE.Overthere :
+        player.location = game_objects.index(go_target)
+        return render
+    if get_distance == DISTANCE.NotHere :
+        print('I think we do not see',tag)
         return False
+    if get_distance == DISTANCE.UnknownObject :
+        return False
+#    if player.location == game_objects.index(go_target):
+#        print('I think we are already in place called',tag)
+#        return False
     if isinstance(go_target,Road):
         player.location = go_target.destination
         return render
-    if getRoad(player.location,game_objects.index(go_target)) != None:
-        player.location = game_objects.index(go_target)
-        return render
-    if go_target.location != player.location:
-        print('I think we do not see',tag)
-    else:
-        print('We can\'t')
+#    if getRoad(player.location,game_objects.index(go_target)) != None:
+#        player.location = game_objects.index(go_target)
+#        return render
+#    if go_target.location != player.location:
+#        print('I think we do not see',tag)
+    print('We can\'t')
     
     return False
 
